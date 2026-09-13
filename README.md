@@ -1,35 +1,95 @@
 # BSAIS 3A Survey — Cloudflare + GitHub + Google Apps Script
 
+This repository is the BSAIS 3A Survey only.
+
 ## Architecture
-Browser → Cloudflare Worker → Google Apps Script → Google Sheet / Email
 
-The repository is ready for Cloudflare deployment. The Apps Script backend is included in `apps-script/Code.gs`.
+Browser
+→ Cloudflare Worker
+→ Google Apps Script
+→ Google Sheet + confirmation email
 
-## Cloudflare deployment
-1. Push this repository to GitHub.
-2. In Cloudflare Workers & Pages, create a Worker from the GitHub repository.
-3. Use the repository root as the project directory.
-4. Build command: `npm run deploy`
-5. Deploy.
+The browser never connects directly to Google Apps Script.
 
-For direct Wrangler deployment:
-```bash
-npm install
-npx wrangler deploy
+## Repository
+
+```text
+JPIA-Survey-main/
+├── public/
+│   └── survey.html
+├── src/
+│   └── worker.js
+├── apps-script/
+│   └── Code.gs
+├── wrangler.toml
+├── package.json
+└── README.md
 ```
 
+## Cloudflare deployment
+
+Deploy this as a **Cloudflare Worker**, not as a normal static Pages site.
+
+### GitHub / Workers Builds
+
+Connect this GitHub repository to **Cloudflare Workers & Pages → Workers → Create → Import a repository** (the exact dashboard wording may vary).
+
+Use:
+
+- Root directory: `/`
+- Build command: `npx wrangler deploy`
+- Deploy command/output: handled by `wrangler.toml`
+- No separate static output directory is required.
+
+The `wrangler.toml` file already defines the static assets directory:
+
+```toml
+[assets]
+directory = "./public"
+binding = "ASSETS"
+```
+
+The Worker explicitly calls `env.ASSETS.fetch(request)` for the website.
+
+After deployment, opening the Worker URL `/` should display `public/survey.html`.
+
 ## Google Apps Script
-The included `apps-script/Code.gs` is the backend used by the Worker. It must be deployed once as a Google Apps Script Web App with:
+
+`apps-script/Code.gs` is the backend.
+
+Deploy that file as a Google Apps Script Web App:
+
 - Execute as: Me
 - Who has access: Anyone
 
-The Worker already points to the supplied `/exec` deployment URL.
+The Worker is already configured to use the supplied Apps Script `/exec` URL.
 
-## Files
-- `public/survey.html` — survey UI
-- `src/worker.js` — Cloudflare proxy/API
-- `apps-script/Code.gs` — Google Sheets + email backend
-- `wrangler.toml` — Cloudflare configuration
-- `package.json` — deployment package
+## Google Sheet
+
+The Apps Script is configured for:
+
+- Spreadsheet ID: `11l-WmtmjIuWxGlpcVJQyWXZrn3286S2RYQCbSiIDlgo`
+- Sheet: `BSAIS 3A`
+- First data row: `19`
+- Course: `Bachelor of Science in Accounting Information System`
+
+The backend also copies existing Google Sheets data-validation/dropdown rules to a new submission row before writing the new values.
+
+## API routes
+
+- `GET /api/survey/names`
+- `POST /api/survey`
+
+All other requests are served from `public/`.
+
+## Important
+
+If Cloudflare shows:
+
+> There is nothing here yet
+
+the project was deployed as a static Pages project or the Worker was not deployed from `wrangler.toml`.
+
+Use the **Worker** deployment with `npx wrangler deploy`.
 
 PM PRINT, ISU printing, and other projects are not included.

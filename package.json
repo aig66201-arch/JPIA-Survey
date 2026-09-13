@@ -1,5 +1,5 @@
 {
-  "name": "bsais-3a-survey",
+  "name": "jpia-survey",
   "private": true,
   "scripts": {
     "dev": "wrangler dev",
