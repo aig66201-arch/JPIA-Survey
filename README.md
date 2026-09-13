@@ -1,39 +1,35 @@
 # BSAIS 3A Survey — Cloudflare + GitHub + Google Apps Script
 
-This repository is based on the existing BSAIS 3A Survey repository and uses the same Cloudflare HTML-serving pattern as the supplied `latest(5).zip` reference implementation.
+## Architecture
+Browser → Cloudflare Worker → Google Apps Script → Google Sheet / Email
 
-## Cloudflare serving architecture
+The repository is ready for Cloudflare deployment. The Apps Script backend is included in `apps-script/Code.gs`.
 
-`src/worker.js` handles `/api/*` requests. All non-API requests are passed to the Cloudflare Assets binding:
+## Cloudflare deployment
+1. Push this repository to GitHub.
+2. In Cloudflare Workers & Pages, create a Worker from the GitHub repository.
+3. Use the repository root as the project directory.
+4. Build command: `npm run deploy`
+5. Deploy.
 
-`return env.ASSETS.fetch(request);`
-
-The survey HTML is also present as `public/index.html`. Therefore the main Worker URL `/` resolves directly to the survey without requiring `/survey.html`.
-
-## Routes
-
-- `/` → `public/index.html` → BSAIS 3A Survey
-- `/survey.html` → same survey file
-- `/api/survey` → Google Apps Script submission endpoint
-- `/api/survey/names` → Google Apps Script submitted-names endpoint
-
-## Google Apps Script backend
-
-The Worker uses the existing Apps Script Web App:
-
-https://script.google.com/macros/s/AKfycbwz8zKhr8vFzwcS8FCUXIHtUVakEc2DcbRo9TvPlpTDzVfpmn55dfFNTB2l-5bAzqtG/exec
-
-The Apps Script handles Google Sheet storage, submitted names, confirmation email, validation, alphabetical sorting, and spreadsheet dropdown/data-validation preservation.
-
-## Deploy
-
-Push this repository to GitHub and deploy it as a Cloudflare Worker using Wrangler:
-
+For direct Wrangler deployment:
 ```bash
 npm install
 npx wrangler deploy
 ```
 
-`wrangler.toml` already configures the `public/` directory as Cloudflare Assets.
+## Google Apps Script
+The included `apps-script/Code.gs` is the backend used by the Worker. It must be deployed once as a Google Apps Script Web App with:
+- Execute as: Me
+- Who has access: Anyone
 
-No PM PRINT, ISU Printing, or unrelated project is included.
+The Worker already points to the supplied `/exec` deployment URL.
+
+## Files
+- `public/survey.html` — survey UI
+- `src/worker.js` — Cloudflare proxy/API
+- `apps-script/Code.gs` — Google Sheets + email backend
+- `wrangler.toml` — Cloudflare configuration
+- `package.json` — deployment package
+
+PM PRINT, ISU printing, and other projects are not included.
