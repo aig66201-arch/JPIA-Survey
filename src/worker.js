@@ -1,4 +1,4 @@
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwSPzh8mr2_gdiYmEcpKmdPNX79gRTumxNdU0pXfM04vIGSqjQO_6R6RFCCwY2t9k73/exec";
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwz8zKhr8vFzwcS8FCUXIHtUVakEc2DcbRo9TvPlpTDzVfpmn55dfFNTB2l-5bAzqtG/exec";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
