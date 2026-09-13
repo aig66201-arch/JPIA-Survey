@@ -25,6 +25,11 @@ export default {
     }
 
     // API: load submitted names from Google Apps Script.
+    if (url.pathname === "/" || url.pathname === "/index.html") {
+      const surveyUrl = new URL("/survey.html", request.url);
+      return env.ASSETS.fetch(new Request(surveyUrl.toString(), request));
+    }
+
     if (url.pathname === "/api/survey/names" && request.method === "GET") {
       try {
         const r = await fetch(APPS_SCRIPT_URL + "?action=getSubmittedNames", {
