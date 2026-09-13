@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BSAIS 3A Survey</title>
+<style>
+:root{--blue:#123b72;--gold:#d9a52e;--bg:#f4f7fb;--text:#172033;--muted:#64748b}
+*{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text)}
+header{background:linear-gradient(135deg,var(--blue),#1d5b9f);color:#fff;padding:28px 18px;text-align:center;border-bottom:5px solid var(--gold)}
+header h1{margin:0 0 7px;font-size:27px}header p{margin:0;opacity:.92}
+.container{max-width:900px;margin:22px auto;padding:0 14px}
+.card{background:#fff;border-radius:16px;padding:22px;margin-bottom:18px;box-shadow:0 5px 22px #17345d16}
+.card h2{margin:0 0 17px;color:var(--blue);font-size:20px}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.field{display:flex;flex-direction:column;gap:6px}.full{grid-column:1/-1}
+label{font-weight:700;font-size:14px}input,select{width:100%;padding:12px;border:1px solid #cbd5e1;border-radius:9px;background:#fff;font-size:15px}
+input:focus,select:focus{outline:2px solid #d9a52e44;border-color:var(--blue)}
+small{color:var(--muted)}.preview{background:#f8fafc;border-left:4px solid var(--gold);padding:12px;border-radius:8px}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}button{border:0;border-radius:9px;padding:12px 18px;font-weight:700;cursor:pointer}
+.primary{background:var(--blue);color:#fff}.secondary{background:#e2e8f0;color:#172033}button:disabled{opacity:.55;cursor:not-allowed}
+.status{display:none;margin-top:14px;padding:12px;border-radius:9px;font-weight:600}.status.info{display:block;background:#e0f2fe;color:#075985}.status.success{display:block;background:#dcfce7;color:#166534}.status.error{display:block;background:#fee2e2;color:#991b1b}
+.table-wrap{overflow:auto}table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:11px;border-bottom:1px solid #e2e8f0}th{background:#f1f5f9;color:var(--blue)}
+.loading{text-align:center;color:var(--muted)}
+@media(max-width:680px){.grid{grid-template-columns:1fr}.full{grid-column:auto}header h1{font-size:23px}.card{padding:17px}}
+</style>
+</head>
+<body>
+<header><h1>BSAIS 3A Survey</h1><p>Bachelor of Science in Accounting Information System</p></header>
+<div class="container">
+<form id="surveyForm" novalidate>
+<section class="card">
+<h2>Student Information</h2>
+<div class="grid">
+<div class="field"><label for="lastName">Last Name *</label><input id="lastName" required></div>
+<div class="field"><label for="firstName">First Name *</label><input id="firstName" required></div>
+<div class="field"><label for="middleInitial">Middle Initial *</label><input id="middleInitial" maxlength="1" required></div>
+<div class="field"><label for="extensionName">Extension Name</label><input id="extensionName" placeholder="e.g. Jr"></div>
+<div class="field"><label for="gender">Gender *</label><select id="gender" required><option value="">Select</option><option>Male</option><option>Female</option></select></div>
+<div class="field"><label for="position">Position *</label><select id="position" required><option value="">Select</option><option>Member</option><option>Officer</option></select></div>
+<div class="field"><label for="regionalCouncil">Regional Council *</label><select id="regionalCouncil" required><option value="">Select</option><option>Region II</option></select></div>
+<div class="field"><label for="yearLevel">Year Level *</label><select id="yearLevel" required><option>3rd Year</option><option>1st Year</option><option>2nd Year</option><option>4th Year</option><option>5th Year</option><option>6th Year</option></select></div>
+<div class="field"><label for="internshipDate">Date of Internship</label><input id="internshipDate" type="date"></div>
+<div class="field"><label for="graduationYear">Expected Year of Graduation *</label><input id="graduationYear" inputmode="numeric" maxlength="4" pattern="[0-9]{4}" required></div>
+<div class="field"><label for="email">Email Address *</label><input id="email" type="email" required></div>
+<div class="field"><label for="contactNumber">Contact Number *</label><input id="contactNumber" inputmode="numeric" placeholder="0999-999-9999" required></div>
+<div class="field full"><label for="facebookLink">Facebook Link</label><input id="facebookLink" type="url" placeholder="Optional"></div>
+<div class="field full"><label>Full Name Preview</label><div id="fullNamePreview" class="preview">Your full name will appear here.</div></div>
+</div>
+<div id="status" class="status"></div>
+<div class="actions"><button id="submitBtn" class="primary" type="submit">Submit Survey</button><button id="clearBtn" class="secondary" type="button">Clear</button></div>
+</section>
+</form>
+<section class="card">
+<h2>Submitted Members</h2>
+<div class="table-wrap"><table><thead><tr><th>Full Name</th></tr></thead><tbody id="namesBody"><tr><td class="loading">Loading submitted names...</td></tr></tbody></table></div>
+</section>
+</div>
+<script>
+const form=document.getElementById("surveyForm"),lastName=document.getElementById("lastName"),firstName=document.getElementById("firstName"),middleInitial=document.getElementById("middleInitial"),extensionName=document.getElementById("extensionName"),fullNamePreview=document.getElementById("fullNamePreview"),contactNumber=document.getElementById("contactNumber"),statusBox=document.getElementById("status"),submitBtn=document.getElementById("submitBtn"),namesBody=document.getElementById("namesBody");
+const $=id=>document.getElementById(id);
+const clean=v=>String(v??"").trim().replace(/\s+/g," ");
+const middle=v=>clean(v).replace(/[^A-Za-z]/g,"").slice(0,1).toUpperCase();
+const ext=v=>{let x=clean(v).replace(/[.]+$/,"").trim();return x?x+".":""};
+function fullName(){let f=clean(firstName.value),m=middle(middleInitial.value),l=clean(lastName.value),e=ext(extensionName.value);return [f,m?m+".":"",l,e].filter(Boolean).join(" ")}
+function updateName(){fullNamePreview.textContent=fullName()||"Your full name will appear here."}
+[firstName,lastName,extensionName].forEach(x=>x.addEventListener("input",updateName));
+middleInitial.addEventListener("input",()=>{middleInitial.value=middle(middleInitial.value);updateName()});
+extensionName.addEventListener("blur",()=>{extensionName.value=ext(extensionName.value);updateName()});
+contactNumber.addEventListener("input",()=>{let d=contactNumber.value.replace(/\D/g,"").slice(0,11),o=d.slice(0,4);if(d.length>4)o+="-"+d.slice(4,7);if(d.length>7)o+="-"+d.slice(7,11);contactNumber.value=o});
+function show(type,msg){statusBox.className="status "+type;statusBox.textContent=msg}
+function resetForm(){form.reset();$("course")?.value; $("yearLevel").value="3rd Year";updateName()}
+$("clearBtn").addEventListener("click",()=>{resetForm();statusBox.className="status";statusBox.textContent=""});
+function getErrorMessage(e){return e?.message||String(e||"An unknown error occurred.")}
+function payload(){return {lastName:clean(lastName.value),firstName:clean(firstName.value),middleInitial:middle(middleInitial.value),extensionName:ext(extensionName.value),gender:clean($("gender").value),position:clean($("position").value),regionalCouncil:clean($("regionalCouncil").value),course:"Bachelor of Science in Accounting Information System",yearLevel:clean($("yearLevel").value),internshipDate:$("internshipDate").value||"",graduationYear:clean($("graduationYear").value),email:clean($("email").value),contactNumber:clean(contactNumber.value),facebookLink:clean($("facebookLink").value)}}
+async function api(path,options={}){const r=await fetch(path,options);let x;try{x=await r.json()}catch(e){throw new Error("Server returned an invalid response.")}if(!r.ok||x.success===false)throw new Error(x.message||"Request failed.");return x}
+async function loadNames(){namesBody.innerHTML='<tr><td class="loading">Loading submitted names...</td></tr>';try{const x=await api("/api/survey/names");const names=Array.isArray(x.names)?x.names:[];namesBody.innerHTML="";if(!names.length){namesBody.innerHTML='<tr><td class="loading">No submitted members yet.</td></tr>';return}names.forEach(n=>{const tr=document.createElement("tr"),td=document.createElement("td");td.textContent=String(n||"");tr.appendChild(td);namesBody.appendChild(tr)})}catch(e){namesBody.innerHTML='<tr><td class="loading">'+getErrorMessage(e)+'</td></tr>'}}
+form.addEventListener("submit",async e=>{e.preventDefault();middleInitial.value=middle(middleInitial.value);extensionName.value=ext(extensionName.value);updateName();if(!form.checkValidity()){form.reportValidity();return}if(!/^[A-Za-z]$/.test(middleInitial.value)){show("error","Middle Initial is required and must contain exactly one letter.");return}if(!/^09\\d{2}-\\d{3}-\\d{4}$/.test(contactNumber.value)){show("error","Please enter Contact Number as 0999-999-9999.");return}if(!/^\\d{4}$/.test($("graduationYear").value.trim())){show("error","Expected Year of Graduation must be a 4-digit year.");return}submitBtn.disabled=true;show("info","Submitting your survey...");try{const x=await api("/api/survey",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload())});show("success",x.message||"Your survey was submitted successfully. A confirmation email has been sent to your email address.");resetForm();await loadNames()}catch(e){show("error",getErrorMessage(e))}finally{submitBtn.disabled=false}});
+updateName();loadNames();
+</script>
+</body>
+</html>
